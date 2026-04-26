@@ -30,6 +30,7 @@ export interface Medication {
   daysOfWeek: number[]; // 0 for Sunday, 1 for Monday, etc.
   isPermanent: boolean;
   type: 'pill' | 'injection' | 'syrup';
+  alertTheme: 'fire' | 'party' | 'nature' | 'robot';
 }
 
 export const PATIENTS: Patient[] = [];

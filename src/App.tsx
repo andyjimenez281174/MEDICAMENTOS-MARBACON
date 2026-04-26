@@ -233,7 +233,17 @@ interface AddViewProps {
 }
 
 const AddView: React.FC<AddViewProps> = ({ onSave, patients }) => {
-  const [formData, setFormData] = useState({ patientId: patients[0]?.id || '', medicineName: '', dose: '', startTime: '08:00', frequencyHours: 8, durationDays: 7, isPermanent: false, daysOfWeek: [0, 1, 2, 3, 4, 5, 6] });
+  const [formData, setFormData] = useState({ 
+    patientId: patients[0]?.id || '', 
+    medicineName: '', 
+    dose: '', 
+    startTime: '08:00', 
+    frequencyHours: 8, 
+    durationDays: 7, 
+    isPermanent: false, 
+    daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+    alertTheme: 'fire' as 'fire' | 'party' | 'nature' | 'robot'
+  });
   const toggleDay = (day: number) => {
     if (formData.daysOfWeek.includes(day)) {
       setFormData({ ...formData, daysOfWeek: formData.daysOfWeek.filter(d => d !== day) });
@@ -309,6 +319,27 @@ const AddView: React.FC<AddViewProps> = ({ onSave, patients }) => {
             <motion.div animate={{ x: formData.isPermanent ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
           </button>
         </div>
+        <div className="space-y-3">
+          <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">Tema de Alerta</label>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { id: 'fire', icon: '🚨', label: 'Bomberos' },
+              { id: 'party', icon: '🎉', label: 'Fiesta' },
+              { id: 'nature', icon: '🌿', label: 'Calma' },
+              { id: 'robot', icon: '🤖', label: 'Robot' }
+            ].map(t => (
+              <button 
+                key={t.id} 
+                type="button" 
+                onClick={() => setFormData({...formData, alertTheme: t.id as any})}
+                className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${formData.alertTheme === t.id ? 'bg-primary-container border-primary-container text-white' : 'border-outline-variant text-outline hover:border-outline bg-white'}`}
+              >
+                <span className="text-xl">{t.icon}</span>
+                <span className="text-[8px] font-bold uppercase">{t.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <button onClick={() => onSave(formData)} className="w-full bg-secondary-container text-on-secondary-container py-5 rounded-full font-black text-xl active-tab-shadow active:scale-95 transition-all flex items-center justify-center gap-2">
           <CheckCircle2 size={24} />¡Guardar Rutina!
         </button>
@@ -348,45 +379,146 @@ const PatientsView: React.FC<PatientsViewProps> = ({ patients, onAdd }) => (
 
 interface AlertViewProps {
   onDismiss: () => void;
+  medication: Medication | null;
+  patient: Patient | null;
+  minutesLeft: number;
 }
 
-const AlertView: React.FC<AlertViewProps> = ({ onDismiss }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-gradient-to-br from-primary-fixed to-background flex flex-col items-center justify-center p-8 text-center text-on-surface">
-    <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-       <Star className="absolute top-[10%] left-[10%] text-secondary rotate-12" size={48} fill="currentColor" />
-       <Star className="absolute bottom-[20%] right-[15%] text-primary-container -rotate-12" size={64} fill="currentColor" />
-       <Bell className="absolute top-[30%] right-[10%] text-secondary-container rotate-45" size={40} fill="currentColor" />
-    </div>
-    <div className="relative z-10 w-full max-w-sm">
-      <div className="bg-primary-container text-white p-4 rounded-full inline-flex mb-4 animate-bounce"><Bell size={40} fill="currentColor" /></div>
-      <h1 className="text-4xl font-black text-primary-container mb-2 tracking-tighter">¡Hey! Marbacon te avisa</h1>
-      <p className="text-2xl font-bold text-on-surface-variant mb-10">En 15 minutos es la hora de...</p>
-      <div className="bg-white/95 backdrop-blur-md rounded-xl p-8 pill-shadow mb-12 border border-white">
-        <div className="flex flex-col items-center mb-6">
-          <span className="text-5xl font-black text-on-surface mb-2 tracking-tight">10:30 AM</span>
-          <div className="bg-primary-fixed text-primary-container px-4 py-1.5 rounded-full flex items-center gap-2 font-black text-sm uppercase tracking-widest"><CheckCircle2 size={16} />Próxima Toma</div>
+const AlertView: React.FC<AlertViewProps> = ({ onDismiss, medication, patient, minutesLeft }) => {
+  const theme = medication?.alertTheme || 'fire';
+  
+  const themeStyles = {
+    fire: {
+      bg: 'from-orange-600 via-red-600 to-orange-600',
+      accent: 'text-red-700',
+      iconBg: 'bg-red-700',
+      title: '¡ALERTA MÁXIMA!',
+      decoration: (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <motion.div 
+            animate={{ opacity: [0.2, 0.6, 0.2], scale: [1, 1.1, 1] }} 
+            transition={{ repeat: Infinity, duration: 0.3 }} 
+            className="absolute inset-0 bg-red-600 mix-blend-overlay"
+          />
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_70%)] opacity-50" />
         </div>
-        <div className="h-px bg-outline-variant/30 w-full mb-6" />
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-background rounded-lg p-4 text-center border border-outline-variant/10">
-            <div className="w-12 h-12 bg-secondary-fixed mx-auto rounded-full flex items-center justify-center mb-2 text-secondary"><Users size={24} /></div>
-            <span className="block text-[10px] font-black uppercase text-outline tracking-widest mb-1">Paciente</span>
-            <span className="block text-lg font-bold">Papá</span>
-          </div>
-          <div className="bg-background rounded-lg p-4 text-center border border-outline-variant/10">
-            <div className="w-12 h-12 bg-tertiary-fixed mx-auto rounded-full flex items-center justify-center mb-2 text-tertiary"><Pill size={24} fill="currentColor" /></div>
-            <span className="block text-[10px] font-black uppercase text-outline tracking-widest mb-1">Medicamento</span>
-            <span className="block text-lg font-bold leading-tight">Ibuprofeno</span>
-            <span className="inline-block mt-2 px-3 py-0.5 bg-surface-container-highest rounded-full text-[10px] font-bold">600mg</span>
-          </div>
+      )
+    },
+    party: {
+      bg: 'from-pink-500 via-purple-500 to-indigo-500',
+      accent: 'text-pink-600',
+      iconBg: 'bg-pink-600',
+      title: '¡HORA DE FIESTA!',
+      decoration: (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ y: -20, x: Math.random() * 400, rotate: 0 }}
+              animate={{ y: 800, rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 2 + Math.random() * 3, delay: Math.random() * 2 }}
+              className="absolute w-2 h-4 rounded-sm"
+              style={{ backgroundColor: ['#FFC107', '#E91E63', '#2196F3', '#4CAF50'][i % 4] }}
+            />
+          ))}
         </div>
+      )
+    },
+    nature: {
+      bg: 'from-green-400 via-teal-500 to-emerald-400',
+      accent: 'text-green-600',
+      iconBg: 'bg-green-600',
+      title: 'MOMENTO ZEN',
+      decoration: (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.1, 0.3] }} 
+            transition={{ repeat: Infinity, duration: 4 }} 
+            className="absolute inset-0 bg-white rounded-full scale-150 blur-3xl"
+          />
+        </div>
+      )
+    },
+    robot: {
+      bg: 'from-blue-900 via-purple-900 to-black',
+      accent: 'text-blue-400',
+      iconBg: 'bg-blue-600',
+      title: 'SYSTEM SCAN',
+      decoration: (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+           <div className="absolute inset-x-0 h-1 bg-blue-500/50 shadow-[0_0_15px_blue] animate-[scan_2s_linear_infinite]" />
+           <style>{`
+             @keyframes scan {
+               from { top: 0%; }
+               to { top: 100%; }
+             }
+           `}</style>
+        </div>
+      )
+    }
+  };
+
+  const currentTheme = themeStyles[theme as keyof typeof themeStyles];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      className={`min-h-screen bg-gradient-to-br ${currentTheme.bg} flex flex-col items-center justify-center p-8 text-center text-on-surface relative`}
+    >
+      {currentTheme.decoration}
+      <div className="relative z-10 w-full max-w-sm">
+        <motion.div 
+          animate={{ scale: [1, 1.1, 1] }} 
+          transition={{ repeat: Infinity, duration: 1 }}
+          className={`${currentTheme.iconBg} text-white p-6 rounded-full inline-flex mb-6 shadow-2xl`}
+        >
+          {theme === 'nature' ? <Star size={40} fill="currentColor" /> : <Bell size={40} fill="currentColor" />}
+        </motion.div>
+        
+        <h1 className="text-4xl font-black text-white mb-2 tracking-tighter uppercase leading-none drop-shadow-lg">
+          {currentTheme.title}
+        </h1>
+        <p className="text-white/90 text-xl font-bold mb-8 uppercase tracking-widest italic drop-shadow-md bg-black/20 px-4 py-1 rounded-full inline-block">
+          Faltan {minutesLeft} Minutos
+        </p>
+        
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-white/95 backdrop-blur-md rounded-2xl p-8 pill-shadow mb-12 border border-white"
+        >
+          <div className="flex flex-col items-center mb-6">
+            <span className={`text-6xl font-black ${currentTheme.accent} mb-2 tracking-tight`}>{medication?.startTime}</span>
+            <div className={`${currentTheme.iconBg} text-white px-6 py-2 rounded-full flex items-center gap-2 font-black text-sm uppercase tracking-widest animate-pulse`}>
+               <CheckCircle2 size={18} /> PRÓXIMA TOMA
+            </div>
+          </div>
+          <div className="h-px bg-outline-variant/30 w-full mb-6" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-background rounded-xl p-5 text-center border border-outline-variant/10">
+              <div className={`w-12 h-12 ${currentTheme.iconBg}/10 mx-auto rounded-full flex items-center justify-center mb-2 ${currentTheme.accent}`}><Users size={24} /></div>
+              <span className="block text-[10px] font-black uppercase text-outline tracking-widest mb-1">Paciente</span>
+              <span className="block text-xl font-bold leading-tight">{patient?.name || '---'}</span>
+            </div>
+            <div className="bg-background rounded-xl p-5 text-center border border-outline-variant/10">
+              <div className={`w-12 h-12 ${currentTheme.iconBg}/10 mx-auto rounded-full flex items-center justify-center mb-2 ${currentTheme.accent}`}><Pill size={24} fill="currentColor" /></div>
+              <span className="block text-[10px] font-black uppercase text-outline tracking-widest mb-1">Medicina</span>
+              <span className="block text-xl font-bold leading-tight">{medication?.name || '---'}</span>
+            </div>
+          </div>
+        </motion.div>
+        
+        <button 
+          onClick={onDismiss} 
+          className="w-full bg-white text-on-background py-5 rounded-full font-black text-2xl active-tab-shadow active:scale-95 transition-all flex items-center justify-center gap-4 group ring-8 ring-white/20"
+        >
+          ¡ENTENDIDO!<ThumbsUp size={32} fill="currentColor" className="group-hover:rotate-12 transition-transform" />
+        </button>
       </div>
-      <button onClick={onDismiss} className="w-full bg-secondary-container text-on-secondary-container py-5 rounded-full font-black text-2xl active-tab-shadow active:scale-95 transition-all flex items-center justify-center gap-4 group">
-        ¡Entendido, gracias!<ThumbsUp size={32} fill="currentColor" className="group-hover:rotate-12 transition-transform" />
-      </button>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 // --- Main App ---
 
@@ -395,6 +527,86 @@ export default function App() {
   const [meds, setMeds] = useState<Medication[]>(INITIAL_MEDS);
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const [alertingMed, setAlertingMed] = useState<{ med: Medication; patient: Patient | undefined; minutesLeft: number } | null>(null);
+  const [alarmAudio, setAlarmAudio] = useState<HTMLAudioElement | null>(null);
+  const [triggeredAlerts, setTriggeredAlerts] = useState<Record<string, number[]>>({});
+
+  // Alarm checker
+  useEffect(() => {
+    const sounds = {
+      fire: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
+      party: 'https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3',
+      nature: 'https://assets.mixkit.co/active_storage/sfx/10/10-preview.mp3',
+      robot: 'https://assets.mixkit.co/active_storage/sfx/1020/1020-preview.mp3'
+    };
+    
+    const checkAlarms = () => {
+      const now = new Date();
+      const thresholds = [15, 10, 5];
+      
+      meds.forEach(med => {
+        const [hours, minutes] = med.startTime.split(':').map(Number);
+        const firstDose = new Date();
+        firstDose.setHours(hours, minutes, 0, 0);
+
+        let next = new Date(firstDose);
+        while (next < now) {
+          next.setHours(next.getHours() + med.frequencyHours);
+        }
+
+        const diffMs = next.getTime() - now.getTime();
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+        thresholds.forEach(threshold => {
+          // Check if we are at the threshold and haven't triggered it yet for this dose cycle
+          const alertKey = `${med.id}-${next.getTime()}`;
+          const alreadyTriggered = triggeredAlerts[alertKey]?.includes(threshold);
+
+          if (diffMinutes === threshold && !alreadyTriggered && currentView !== View.ALERT) {
+            const patient = patients.find(p => p.id === med.patientId);
+            setAlertingMed({ med, patient, minutesLeft: threshold });
+            setView(View.ALERT);
+            
+            // Mark as triggered
+            setTriggeredAlerts(prev => ({
+              ...prev,
+              [alertKey]: [...(prev[alertKey] || []), threshold]
+            }));
+
+            // Play Sound
+            const audio = new Audio(sounds[med.alertTheme as keyof typeof sounds] || sounds.fire);
+            audio.loop = true;
+            audio.play().catch(e => {
+              console.log("Audio play blocked. Needs user interaction.");
+              // Fallback: alert might still show visually
+            });
+            setAlarmAudio(audio);
+
+            // Vibrate if supported
+            if ('vibrate' in navigator) {
+              navigator.vibrate([500, 200, 500, 200, 500]);
+            }
+          }
+        });
+      });
+    };
+
+    const interval = setInterval(checkAlarms, 10000); // Check every 10 seconds for more precision
+    return () => clearInterval(interval);
+  }, [meds, patients, currentView, triggeredAlerts]);
+
+  const stopAlarm = () => {
+    if (alarmAudio) {
+      alarmAudio.pause();
+      alarmAudio.currentTime = 0;
+      setAlarmAudio(null);
+    }
+    if ('vibrate' in navigator) {
+      navigator.vibrate(0); // Stop vibration
+    }
+    setAlertingMed(null);
+    setView(View.AGENDA);
+  };
 
   const handleStart = () => {
     if (patients.length === 0) {
@@ -430,6 +642,7 @@ export default function App() {
       durationDays: form.durationDays,
       daysOfWeek: form.daysOfWeek,
       isPermanent: form.isPermanent,
+      alertTheme: form.alertTheme,
       type: 'pill'
     };
     setMeds([...meds, newMed]);
@@ -437,7 +650,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen font-sans bg-background selection:bg-secondary-container">
+    <div 
+      className="min-h-screen font-sans bg-background selection:bg-secondary-container"
+      onClick={() => {
+        // Subtle interaction to enable audio on many devices
+        if (alarmAudio && alarmAudio.paused) {
+          alarmAudio.play().catch(() => {});
+        }
+      }}
+    >
       <div className="md:max-w-md md:mx-auto md:min-h-screen md:bg-white md:shadow-2xl relative">
         <AnimatePresence mode="wait">
           {currentView === View.SPLASH && <SplashView key="splash" onStart={handleStart} />}
@@ -445,7 +666,15 @@ export default function App() {
           {currentView === View.AGENDA && <AgendaView key="agenda" medications={meds} patients={patients} />}
           {currentView === View.ADD && <AddView key="add" onSave={handleSaveMed} patients={patients} />}
           {currentView === View.PATIENTS && <PatientsView key="patients" patients={patients} onAdd={() => setShowAddPatient(true)} />}
-          {currentView === View.ALERT && <AlertView key="alert" onDismiss={() => setView(View.AGENDA)} />}
+          {currentView === View.ALERT && (
+            <AlertView 
+              key="alert" 
+              onDismiss={stopAlarm} 
+              medication={alertingMed?.med || null} 
+              patient={alertingMed?.patient || null} 
+              minutesLeft={alertingMed?.minutesLeft || 0}
+            />
+          )}
         </AnimatePresence>
         <AnimatePresence>
           {showAddPatient && <AddPatientView key="add-patient" isFirst={patients.length === 0} onSave={handleSavePatient} onCancel={() => setShowAddPatient(false)} />}
