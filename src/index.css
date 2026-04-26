@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap');
+
+@theme {
+  --font-sans: "Lexend", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand Colors from Warm Companion Theme */
+  --color-primary: #690008;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #8b1a1a;
+  --color-on-primary-container: #ff9a91;
+  
+  --color-secondary: #745c00;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fcd03d;
+  --color-on-secondary-container: #705900;
+  
+  --color-tertiary: #00391d;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #11522f;
+  
+  --color-background: #f9f9f9;
+  --color-surface: #f9f9f9;
+  --color-on-surface: #1a1c1c;
+  --color-on-surface-variant: #58413f;
+  
+  --color-outline: #8c716e;
+  --color-outline-variant: #e0bfbc;
+
+  /* Custom Fixed Colors */
+  --color-primary-fixed: #ffdad6;
+  --color-secondary-fixed: #ffe089;
+  --color-tertiary-fixed: #b0f1c2;
+
+  /* Border Radius */
+  --radius-xl: 3rem;
+  --radius-lg: 2rem;
+  --radius-md: 1.5rem;
+
+  /* Animations */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  --animate-float: float 3s ease-in-out infinite;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-sans antialiased;
+  }
+}
+
+@layer components {
+  .pill-shadow {
+    box-shadow: 0 8px 24px rgba(139, 26, 26, 0.08);
+  }
+  .active-tab-shadow {
+    box-shadow: 0 8px 16px rgba(252, 208, 61, 0.3);
+  }
+}
